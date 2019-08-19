@@ -1,0 +1,37 @@
+class yum::zfs::dkms {
+  include yum
+  yumrepo { "zfs":
+    descr    => "ZFS on Linux for EL7 - dkms",
+    baseurl  => "http://download.zfsonlinux.org/epel/7.6/$basearch/",
+    gpgcheck => 1,
+    gpgkey   => "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZFS",
+    enabled  => 1,
+    require  => Yumrepo["base"],
+  }
+
+  file { "/etc/pki/rpm-gpg/RPM-GPG-KEY-ZFS":
+    owner  => root,
+    group  => root,
+    mode   => 0644,
+    source => "puppet:///modules/yum/RPM-GPG-KEY-ZFS",
+  }
+}
+
+class yum::zfs::kmod {
+  include yum
+  yumrepo { "zfs":
+    descr    => "ZFS on Linux for EL7 - kmod",
+    baseurl  => "http://download.zfsonlinux.org/epel/7.6/kmod/$basearch/",
+    gpgcheck => 1,
+    gpgkey   => "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZFS",
+    enabled  => 1,
+    require  => Yumrepo["base"],
+  }
+
+  file { "/etc/pki/rpm-gpg/RPM-GPG-KEY-ZFS":
+    owner  => root,
+    group  => root,
+    mode   => 0644,
+    source => "puppet:///modules/yum/RPM-GPG-KEY-ZFS",
+  }
+}
