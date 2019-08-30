@@ -1,5 +1,4 @@
 class yum::zfs::dkms {
-  include yum
   yumrepo { "zfs":
     descr    => "ZFS on Linux for EL7 - dkms",
     baseurl  => "http://download.zfsonlinux.org/epel/7.6/$basearch/",
@@ -18,7 +17,6 @@ class yum::zfs::dkms {
 }
 
 class yum::zfs::kmod {
-  include yum
   yumrepo { "zfs":
     descr    => "ZFS on Linux for EL7 - kmod",
     baseurl  => "http://download.zfsonlinux.org/epel/7.6/kmod/$basearch/",
