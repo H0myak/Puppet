@@ -23,12 +23,12 @@ defaults
   timeout server  50000
 
 <% if @redis == true -%>
-frontend redis_frontend
+frontend <%= @redis_cluster %>-frontend
   mode tcp
   bind 0.0.0.0:<%= @redis_listen %>
-  default_backend redis-backend
+  default_backend <%= @redis_cluster %>-backend
 
-backend redis-backend
+backend <%= @redis_cluster %>-backend
   mode tcp
   option tcplog
   option tcp-check
@@ -40,6 +40,6 @@ backend redis-backend
   tcp-check expect string role:master
   tcp-check send QUIT\r\n
   tcp-check expect string +OK
-  <% @redis_node.each do |hash| %>server <%= hash['host'] %> <%= hash['ip'] %>:<%= @redis_srv_port %> maxconn 4096 check inter 3s
+  <% @redis_node.each do |hash| %>server <%= hash['servername'] %> <%= hash['ip'] %>:<%= hash['port'] %> maxconn 4096 check inter 3s
   <% end %>
 <% end -%>

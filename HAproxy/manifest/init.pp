@@ -2,8 +2,8 @@ class haproxy (
   $redis          = false,
   $redis_node     = [],
   $redis_pass     = '',
+  $redis_cluster  = '',
   $redis_listen   = '6379',
-  $redis_srv_port = '6379',
   ) {
   package {'haproxy':
     ensure => present }

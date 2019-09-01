@@ -41,35 +41,49 @@ define lxd::create(
     }
   }
   if $ipaddr != '' {
-    exec { "lxc exec $container -- sh -c \echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr\nPREFIX=$prefix\nMTU=$mtu' > $ifcfg-$iface; $if_reload\"":
+    exec { "lxc exec $container -- sh -c \"echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr' > $ifcfg-$iface; $if_reload\"":
       path   => '/usr/bin:/usr/sbin:/bin:/var/lib/snapd/snap/bin',
       unless => ["lxc exec $container -- sh -c \"cat $ifcfg-$iface\" | grep \"$ipaddr\""],
       require => Exec["lxc launch images:centos/7/amd64 $container -s $storage; sleep 10"],
+    }
+  }
+  if $prefix != '' {
+    exec { "lxc exec $container -- sh -c \"sed '/PREFIX=/d' -i $ifcfg-$iface; echo -e 'PREFIX=$prefix' >> $ifcfg-$iface; $if_reload\"":
+      path   => '/usr/bin:/usr/sbin:/bin:/var/lib/snapd/snap/bin',
+      unless => "lxc exec $container -- sh -c \"cat $ifcfg-$iface\" | grep \"PREFIX=$prefix\"",
+      require => Exec["lxc exec $container -- sh -c \"echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr' > $ifcfg-$iface; $if_reload\""],
+    }
+  }
+  if $mtu != '' {
+    exec { "lxc exec $container -- sh -c \"sed '/MTU=/d' -i $ifcfg-$iface; echo -e 'MTU=$mtu' >> $ifcfg-$iface; $if_reload\"":
+      path   => '/usr/bin:/usr/sbin:/bin:/var/lib/snapd/snap/bin',
+      unless => "lxc exec $container -- sh -c \"cat $ifcfg-$iface\" | grep \"MTU=$mtu\"",
+      require => Exec["lxc exec $container -- sh -c \"echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr' > $ifcfg-$iface; $if_reload\""],
     }
   }
   if $gateway != '' {
     exec { "lxc exec $container -- sh -c \"sed '/GATEWAY=/d' -i $ifcfg-$iface; echo -e 'GATEWAY=$gateway' >> $ifcfg-$iface; $if_reload\"":
       path   => '/usr/bin:/usr/sbin:/bin:/var/lib/snapd/snap/bin',
       unless => "lxc exec $container -- sh -c \"cat $ifcfg-$iface\" | grep \"$gateway\"",
-      require => Exec["lxc exec $container -- sh -c \echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr\nPREFIX=$prefix\nMTU=$mtu' > $ifcfg-$iface; $if_reload\""],
+      require => Exec["lxc exec $container -- sh -c \"echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr' > $ifcfg-$iface; $if_reload\""],
     }
   }
   if $dns1 != '' {
     exec { "lxc exec $container -- sh -c \"sed '/DNS1=/d' -i $ifcfg-$iface; echo -e 'DNS1=$dns1' >> $ifcfg-$iface; $if_reload\"":
       path   => '/usr/bin:/usr/sbin:/bin:/var/lib/snapd/snap/bin',
       unless => "lxc exec $container -- sh -c \"cat $ifcfg-$iface\" | grep \"$dns1\"",
-      require => Exec["lxc exec $container -- sh -c \echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr\nPREFIX=$prefix\nMTU=$mtu' > $ifcfg-$iface; $if_reload\""],
+      require => Exec["lxc exec $container -- sh -c \"echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr' > $ifcfg-$iface; $if_reload\""],
     }
   }
   if $dns2 != '' {
     exec { "lxc exec $container -- sh -c \"sed '/DNS2=/d' -i $ifcfg-$iface; echo -e 'DNS1=$dns2' >> $ifcfg-$iface; $if_reload\"":
       path   => '/usr/bin:/usr/sbin:/bin:/var/lib/snapd/snap/bin',
       unless => "lxc exec $container -- sh -c \"cat $ifcfg-$iface\" | grep \"$dns2\"",
-      require => Exec["lxc exec $container -- sh -c \echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr\nPREFIX=$prefix\nMTU=$mtu' > $ifcfg-$iface; $if_reload\""],
+      require => Exec["lxc exec $container -- sh -c \"echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr' > $ifcfg-$iface; $if_reload\""],
     }
   }
   if $memory != '' {
-    exec { "lxc config device set $container limits.memory $memory":
+    exec { "lxc config set $container limits.memory $memory":
       path   => '/usr/bin:/usr/sbin:/bin:/var/lib/snapd/snap/bin',
       unless => "lxc config show $container | grep \"limits.memory: $memory\"",
       require => Exec["lxc launch images:centos/7/amd64 $container -s $storage; sleep 10"],
