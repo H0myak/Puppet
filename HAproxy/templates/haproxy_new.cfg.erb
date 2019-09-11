@@ -1,0 +1,49 @@
+global
+  log         127.0.0.1 local2
+  chroot      /var/lib/haproxy
+  pidfile     /var/run/haproxy.pid
+  maxconn     4000
+  user        haproxy
+  group       haproxy
+  daemon
+  stats socket /var/lib/haproxy/stats
+
+defaults
+  log     global
+  mode    http
+
+  option  dontlognull
+  retries 3
+  maxconn 10000
+  timeout connect 5000
+  timeout client  50000
+  timeout server  50000
+  <% if @http_back == true %>
+  option  httplog
+  option httpclose
+  option forwardfor
+  <% end %>
+  <% if @redis_back == true %>
+  option redispatch
+  <% end %>
+
+<% if !@frontend.empty?%>
+<% @frontend.each do |var| %>
+frontend <%= var['name'] %>-frontend
+  mode <%= var{'mode'] %>
+  bind <%= var{'address'] %>:<%= var{'port'] %>
+  default_backend <%= var['name'] %>-backend
+<% end %>
+
+<% if !@frontend.empty?%>
+<% @frontend.each do |back| %>
+backend <%= back['name'] %>-backend
+  mode <%= back{'mode'] %>
+  <% if !back['check'].empty? %>
+  back['check']
+  <% end %>
+  <% @server.each do |srv| %>
+  <% if srv['front'] == back['name'] %>
+  server <%= srv['servername'] %> <%= srv['ip'] %>:<%= srv['port'] %> <% if !srv['maxconn'].empty? %> maxconn <% srv['maxconn'] %><% end %> check inter 3s
+  <% end %>
+<% end -%>
