@@ -11,7 +11,6 @@ global
 defaults
   log     global
   mode    http
-
   option  dontlognull
   retries 3
   maxconn 10000
@@ -19,7 +18,7 @@ defaults
   timeout client  50000
   timeout server  50000
   option redispatch
-<% if @http_back == true %>
+<% if @http_back == 'true' %>
   option  httplog
   option httpclose
   option forwardfor
@@ -27,36 +26,36 @@ defaults
   default_backend def_back
 
 <% if !@frontend.empty? %>
-<% @frontend.each do |front| %>
+  <% @frontend.each do |front| %>
   frontend <%= front['name'] %>-frontend
-    mode <%= front['mode'] %>
-    bind <%= front['address'] %>:<%= front['port'] %>
-  <% if front.has_key?('acl_name') %>
-    acl <%= front['acl_name'] %> <%= front['acl_rule'] %>
-    use_backend <%= front['acl_name'] %>-backend
-  <% else %>
-    use_backend <%= front['name'] %>-backend
-  <% end %>
-<% end %>
-
-<% if !@frontend.empty? %>
-<% @frontend.each do |back| %>
-<% if back.has_key?('acl_name') %>
-   <% @name == back['acl_name'] %>
-<% else %>
-   <% @name == back['name'] %>
-<% end %>
-  backend <%= @name %>-backend
-  mode <%= back['mode'] %>
-  <% if back.has_key?('check') %>
-  back['check']
-  <% end %>
-  <% @server.each do |srv| %>
-    <% if srv['front'] == @name %>
-      server <%= srv['servername'] %> <%= srv['ip'] %>:<%= srv['port'] %> <% if srv.has_key?('maxconn') %> maxconn <% srv['maxconn'] %><% end %><% if srv.has_key?('time_check') %> check inter <% srv['time_check'] %><% end %>
+  mode <%= front['mode'] %>
+  bind <%= front['address'] %>:<%= front['port'] %>
+    <% if front.has_key?('acl_name') %>
+  acl <%= front['acl_name'] %>-acl <%= front['acl_rule'] %>
+  use_backend <%= front['acl_name'] %>-backend if <%= front['acl_name'] %>-acl
+    <% else %>
+  use_backend <%= front['name'] %>-backend
     <% end %>
   <% end %>
 <% end %>
-
+<% if !@frontend.empty? %>
+  <% @frontend.each do |back| %>
+    <% if back.has_key?('acl_name') %>
+      <% @name=back['acl_name'] %>
+    <% else %>
+      <% @name=back['name'] %>
+    <% end %>
+backend <%= @name %>-backend
+  mode <%= back['mode'] %>
+    <% if back.has_key?('check') %>
+  <%= back['check'] %>
+    <% end %>
+    <% @server.each do |srv| %>
+      <% if srv['front'] == @name %>
+  server <%= srv['servername'] %> <%= srv['ip'] %>:<%= srv['port'] %> <% if srv.has_key?('maxconn') %> maxconn <%= srv['maxconn'] %><% end %><% if srv.has_key?('time_check') %> check inter <%= srv['time_check'] %><% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
 backend def_back
-  server 127.0.0.1:666
+  server default_srv 127.0.0.1:666

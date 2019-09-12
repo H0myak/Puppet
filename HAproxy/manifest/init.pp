@@ -1,63 +1,47 @@
 class haproxy (
-  $redis          = false,
-  $redis_node     = [],
-  $redis_pass     = '',
-  $redis_cluster  = '',
-  $redis_listen   = '6379',
-  ) {
-  package {'haproxy':
-    ensure => present }
-  zabbix::metadata { 'haproxy': }
-  service { ['haproxy']:
-    ensure => running,
-    enable   => true,
-    require  => Package['haproxy'],
-  }
-  file {'/etc/haproxy/haproxy.cfg':
-    ensure  => file,
-    content => template('haproxy.cfg.erb'),
-    require => Package['haproxy'],
-    notify  => Service['haproxy'],
-  }
-}
-
-
-class haproxy::new (
-  $http          = true,
+  $http_back     = 'true',
   $frontend      = [],
   $server        = [],
   ) {
   package {'haproxy':
     ensure => present }
-  zabbix::metadata { 'haproxy': }
   service { ['haproxy']:
     ensure => running,
-    enable   => true,
+    enable   => true'
     require  => Package['haproxy'],
   }
-  file {'/etc/haproxy/haproxy_new.cfg':
+  file {'/etc/haproxy/haproxy.cfg':
     ensure  => file,
-    content => template('haproxy.cfg.erb'),
+    content => template('/etc/puppetlabs/puppet/haproxy.cfg.erb'),
     require => Package['haproxy'],
     notify  => Service['haproxy'],
   }
 }
 
 /*
-# Example of use this class
-#  P.S. frontend hash used to backend generate
+README:
+---
+http_back - (true/false) -- enable options for web backend
+frontend  - (hash key)   -- variables for generate frontend and backend blocks
+server    - (hash key)   -- variables for backend servers
 
-frontend => [{ name       => 'frontend name',
-               mode       => 'http or tcp',
-               address    => 'bind address',
-               port       => 'bind port',
-               acl_name   => 'use this key if you nead acl',
-               acl_rule   => 'example: hdr(host) -i www.domain.com',
-               check      => 'backend checks' }]
-server   => [{ front      => 'used frontend',
-               servername => 'backend name',
-               ip         => 'backend ip',
-               port       => 'backend port',
-               maxconn    => 'maximum of connections',
-               time_check => 'backend check timeout' }]
+EXAMPLE:
+---
+frontend      => [{
+  name        => 'http',
+  acl_name    => 'test_acl_name',             # optional
+  mode        => 'http',
+  address     => '0.0.0.0',
+  port        => '80',
+  acl_rule    => 'path -i -m beg /static',    # optional
+  check       => 'option tcp-check',          # optional
+  },
+server        => [{
+  front       => 'test_acl_name',
+  servername  => 'nameserver',
+  ip          => '127.0.0.1',
+  port        => '8080',
+  maxconn     => '4096',                      # optional
+  time_check  => '2s',                        # optional
+  }]
 */
