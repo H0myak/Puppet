@@ -25,12 +25,7 @@ class haproxy (
 class haproxy::new (
   $http          = true,
   $frontend      = [],
-  $backend       = [],
-
-  $redis_node     = [],
-  $redis_pass     = '',
-  $redis_cluster  = '',
-  $redis_listen   = '6379',
+  $server        = [],
   ) {
   package {'haproxy':
     ensure => present }
@@ -47,3 +42,22 @@ class haproxy::new (
     notify  => Service['haproxy'],
   }
 }
+
+/*
+# Example of use this class
+#  P.S. frontend hash used to backend generate
+
+frontend => [{ name       => 'frontend name',
+               mode       => 'http or tcp',
+               address    => 'bind address',
+               port       => 'bind port',
+               acl_name   => 'use this key if you nead acl',
+               acl_rule   => 'example: hdr(host) -i www.domain.com',
+               check      => 'backend checks' }]
+server   => [{ front      => 'used frontend',
+               servername => 'backend name',
+               ip         => 'backend ip',
+               port       => 'backend port',
+               maxconn    => 'maximum of connections',
+               time_check => 'backend check timeout' }]
+*/
