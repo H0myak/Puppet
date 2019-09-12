@@ -47,14 +47,14 @@ define lxd::create(
       require => Exec["lxc launch images:centos/7/amd64 $container -s $storage; sleep 10"],
     }
   }
-  if $prefix != '' {
+  if $prefix != '' and $ipaddr != '' {
     exec { "lxc exec $container -- sh -c \"sed '/PREFIX=/d' -i $ifcfg-$iface; echo -e 'PREFIX=$prefix' >> $ifcfg-$iface; $if_reload\"":
       path   => '/usr/bin:/usr/sbin:/bin:/var/lib/snapd/snap/bin',
       unless => "lxc exec $container -- sh -c \"cat $ifcfg-$iface\" | grep \"PREFIX=$prefix\"",
       require => Exec["lxc exec $container -- sh -c \"echo -e '# Managed by puppet\nDEVICE=$iface\nBOOTPROTO=none\nONBOOT=yes\nTYPE=Ethernet\nIPADDR=$ipaddr' > $ifcfg-$iface; $if_reload\""],
     }
   }
-  if $mtu != '' {
+  if $mtu != '' and $ipaddr != '' {
     exec { "lxc exec $container -- sh -c \"sed '/MTU=/d' -i $ifcfg-$iface; echo -e 'MTU=$mtu' >> $ifcfg-$iface; $if_reload\"":
       path   => '/usr/bin:/usr/sbin:/bin:/var/lib/snapd/snap/bin',
       unless => "lxc exec $container -- sh -c \"cat $ifcfg-$iface\" | grep \"MTU=$mtu\"",
