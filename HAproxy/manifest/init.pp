@@ -40,11 +40,10 @@ EXAMPLE:
 ---
 frontend      => [{
   name        => 'http',
-  acl_name    => 'test_acl_name',             # optional
+  acl         => [{ acl_name => 'acl2', acl_rule => 'path -i -m beg /data', acl_check => 'option tcp-check' }],             # optional
   mode        => 'http',
   address     => '0.0.0.0',
   port        => '80',
-  acl_rule    => 'path -i -m beg /static',    # optional
   check       => 'option tcp-check',          # optional
   },
 server        => [{
