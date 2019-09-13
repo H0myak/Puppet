@@ -1,61 +1,69 @@
 global
-  log         127.0.0.1 local2
-  chroot      /var/lib/haproxy
-  pidfile     /var/run/haproxy.pid
-  maxconn     4000
-  user        haproxy
-  group       haproxy
+  log             <%= @gl_log %>
+  chroot          /var/lib/haproxy
+  pidfile         /var/run/haproxy.pid
+  user            <%= @gl_user %>
+  group           <%= @gl_group %>
   daemon
   stats socket /var/lib/haproxy/stats
+  <% if !@gl_custom.empty? -%>
+  <%= @gl_custom %>
+  <% end -%>
 
 defaults
-  log     global
-  mode    http
-  option  dontlognull
-  retries 3
-  maxconn 10000
-  timeout connect 5000
-  timeout client  50000
-  timeout server  50000
-  option redispatch
-<% if @http_back == 'true' %>
-  option  httplog
-  option httpclose
-  option forwardfor
+  log              global
+  mode             <%= @def_mode %>
+  option           dontlognull
+  maxconn          <%= @def_maxconn %>
+  retries          <%= @def_retries %>
+  timeout connect  <%= @def_tm_connect %>
+  timeout client   <%= @def_tm_client %>
+  timeout server   <%= @def_tm_server %>
+  option           redispatch
+<% if @http_back == 'true' -%>
+  option           httplog
+  option           httpclose
+  option           forwardfor
+<% if !@http_back_custom.empty? -%>
+  <%= @http_back_custom %>
+<% end -%>
+<% end -%>
+  default_backend  def_back
+<% if !@def_custom.empty? -%>
+<%= @def_custom %>
 <% end %>
-  default_backend def_back
-
-<% if !@frontend.empty? %>
-  <% @frontend.each do |front| %>
-  frontend <%= front['name'] %>-frontend
+<% if !@frontend.empty? -%>
+<% @frontend.each do |front| -%>
+frontend <%= front['name'] %>-frontend
   mode <%= front['mode'] %>
   bind <%= front['address'] %>:<%= front['port'] %>
-    <% if front.has_key?('acl_name') %>
+<% if front.has_key?('acl_name') -%>
   acl <%= front['acl_name'] %>-acl <%= front['acl_rule'] %>
   use_backend <%= front['acl_name'] %>-backend if <%= front['acl_name'] %>-acl
-    <% else %>
+<% else -%>
   use_backend <%= front['name'] %>-backend
-    <% end %>
-  <% end %>
 <% end %>
-<% if !@frontend.empty? %>
-  <% @frontend.each do |back| %>
-    <% if back.has_key?('acl_name') %>
-      <% @name=back['acl_name'] %>
-    <% else %>
-      <% @name=back['name'] %>
-    <% end %>
+<% end -%>
+<% end -%>
+<% if !@frontend.empty? -%>
+<% @frontend.each do |back| -%>
+<% if back.has_key?('acl_name') -%>
+<% @name=back['acl_name'] %>
+<% else -%>
+<% @name=back['name'] %>
+<% end -%>
 backend <%= @name %>-backend
   mode <%= back['mode'] %>
-    <% if back.has_key?('check') %>
+<% if back.has_key?('check') -%>
   <%= back['check'] %>
-    <% end %>
-    <% @server.each do |srv| %>
-      <% if srv['front'] == @name %>
+<% end -%>
+<% @server.each do |srv| -%>
+<% if srv['front'] == @name -%>
   server <%= srv['servername'] %> <%= srv['ip'] %>:<%= srv['port'] %> <% if srv.has_key?('maxconn') %> maxconn <%= srv['maxconn'] %><% end %><% if srv.has_key?('time_check') %> check inter <%= srv['time_check'] %><% end %>
-      <% end %>
-    <% end %>
-  <% end %>
-<% end %>
+<% end -%>
+<% end -%>
+<% end -%>
+<% end -%>
+
 backend def_back
-  server default_srv 127.0.0.1:666
+  server <%= @def_backend %>
