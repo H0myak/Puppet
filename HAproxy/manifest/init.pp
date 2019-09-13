@@ -1,26 +1,37 @@
 class haproxy (
-  $http_back     = 'true',
-  $frontend      = [],
-  $server        = [],
+  $http_back      = 'true',
+  $frontend       = [],
+  $server         = [],
+  $def_mode       = 'http',
+  $def_maxconn    = '4000',
+  $def_tm_connect = '5000',
+  $def_tm_client  = '50000',
+  $def_tm_server  = '50000',
+  $def_retries    = '3',
+  $def_backend    = 'default_srv 127.0.0.1:666',
+  $gl_log         = '127.0.0.1 local2',
+  $gl_user        = 'haproxy',
+  $gl_group       = 'haproxy',
+  $gl_custom      = '',
+  $def_custom     = '',
+  $http_back_custom = '',
   ) {
   package {'haproxy':
     ensure => present }
   service { ['haproxy']:
     ensure => running,
-    enable   => true'
+    enable   => 'true',
     require  => Package['haproxy'],
   }
-  file {'/etc/haproxy/haproxy.cfg':
+  file {'/etc/haproxy/haproxy_new.cfg':
     ensure  => file,
-    content => template('/etc/puppetlabs/puppet/haproxy.cfg.erb'),
+    content => template('haproxy/haproxy_new.cfg.erb'),
     require => Package['haproxy'],
-    notify  => Service['haproxy'],
+#    notify  => Service['haproxy'],
   }
 }
 
 /*
-README:
----
 http_back - (true/false) -- enable options for web backend
 frontend  - (hash key)   -- variables for generate frontend and backend blocks
 server    - (hash key)   -- variables for backend servers
