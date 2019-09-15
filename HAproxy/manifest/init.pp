@@ -42,12 +42,13 @@ frontend      => [{
   name        => 'http',
   acl         => [{ acl_name => 'acl2', acl_rule => 'path -i -m beg /data', acl_check => 'option tcp-check' }],             # optional
   mode        => 'http',
+  fr_custom   => ''
   address     => '0.0.0.0',
   port        => '80',
   check       => 'option tcp-check',          # optional
   },
 server        => [{
-  front       => 'test_acl_name',
+  front       => 'http',
   servername  => 'nameserver',
   ip          => '127.0.0.1',
   port        => '8080',
