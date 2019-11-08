@@ -1,0 +1,22 @@
+# Managed by puppet
+
+PidFile            <%= @PidFile %>
+Mode               <%= @Mode %>
+Syslog             <%= @Syslog %>
+SyslogSuccess      <%= @SyslogSuccess %>
+LogWhy             <%= @LogWhy %>
+UserID             <%= @UserID %>
+Socket             <%= @Socket %>
+UMask              <%= @UMask %>
+SendReports        <%= @SendReports %>
+SoftwareHeader     <%= @SoftwareHeader %>
+Canonicalization   <%= @Canonicalization %>
+MinimumKeyBits     <%= @MinimumKeyBits %>
+OversignHeaders    <%= @OversignHeaders %>
+SigningTable       <%= @SigningTable %>
+ExternalIgnoreList <%= @ExternalIgnoreList %>
+KeyTable           <%= @KeyTable %>
+InternalHosts      <%= @InternalHosts %>
+<% if !@main_custom.empty? -%>
+<%= @main_custom %>
+<%= end -%>

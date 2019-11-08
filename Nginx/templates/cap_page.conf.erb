@@ -1,0 +1,29 @@
+server {
+    listen       <%= @port %> default_server;
+    server_name  _;
+
+    location ~* {
+         return 423; #return locked status
+    }
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+
+<% if @ssl != false -%>
+server {
+    listen       <%= @ssl_port %> default_server ssl;
+    server_name  _;
+    ssl_certificate /etc/pki/nginx/ssl.key/cap_page.crt;
+    ssl_certificate_key /etc/pki/nginx/ssl.key/cap_page.key;
+
+    location ~* {
+         return 423; #return locked status
+    }
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+<% end -%>

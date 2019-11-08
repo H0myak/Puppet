@@ -1,0 +1,5 @@
+# Managed by puppet
+
+<% @domain.each do |dom| -%>
+*@<%= dom['domain']%> <%= dom['keyname']%>
+<% end -%>

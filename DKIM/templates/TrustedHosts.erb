@@ -1,0 +1,9 @@
+# Managed by puppet
+
+127.0.0.1
+::1
+<% if !@TrustedHosts.empty? -%>
+<% @TrustedHosts.each do |trusted| -%>
+<%= trusted%>
+<% end -%>
+<% end -%>
