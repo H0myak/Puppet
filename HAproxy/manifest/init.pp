@@ -23,9 +23,9 @@ class haproxy (
     enable   => 'true',
     require  => Package['haproxy'],
   }
-  file {'/etc/haproxy/haproxy_new.cfg':
+  file {'/etc/haproxy/haproxy.cfg':
     ensure  => file,
-    content => template('haproxy/haproxy_new.cfg.erb'),
+    content => template('haproxy/haproxy.cfg.erb'),
     require => Package['haproxy'],
 #    notify  => Service['haproxy'],
   }
