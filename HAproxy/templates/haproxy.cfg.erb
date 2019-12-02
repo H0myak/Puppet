@@ -1,45 +1,79 @@
 global
-  log         127.0.0.1 local2
-  chroot      /var/lib/haproxy
-  pidfile     /var/run/haproxy.pid
-  maxconn     4000
-  user        haproxy
-  group       haproxy
+  log             <%= @gl_log %>
+  chroot          /var/lib/haproxy
+  pidfile         /var/run/haproxy.pid
+  user            <%= @gl_user %>
+  group           <%= @gl_group %>
   daemon
   stats socket /var/lib/haproxy/stats
+<% if !@gl_custom.empty? -%>
+  <%= @gl_custom %>
+<% end -%>
 
 defaults
-  log     global
-  mode    http
-  option  httplog
-  option  dontlognull
-  retries 3
-  option redispatch
-  maxconn 10000
-  option httpclose
-  option forwardfor
-  timeout connect 5000
-  timeout client  50000
-  timeout server  50000
-
-<% if @redis == true -%>
-frontend <%= @redis_cluster %>-frontend
-  mode tcp
-  bind 0.0.0.0:<%= @redis_listen %>
-  default_backend <%= @redis_cluster %>-backend
-
-backend <%= @redis_cluster %>-backend
-  mode tcp
-  option tcplog
-  option tcp-check
-  tcp-check send AUTH\ <%= @redis_pass%>\r\n
-  tcp-check expect string +OK
-  tcp-check send PING\r\n
-  tcp-check expect string +PONG
-  tcp-check send info\ replication\r\n
-  tcp-check expect string role:master
-  tcp-check send QUIT\r\n
-  tcp-check expect string +OK
-  <% @redis_node.each do |hash| %>server <%= hash['servername'] %> <%= hash['ip'] %>:<%= hash['port'] %> maxconn 4096 check inter 3s
-  <% end %>
+  log              global
+  mode             <%= @def_mode %>
+  option           dontlognull
+  maxconn          <%= @def_maxconn %>
+  retries          <%= @def_retries %>
+  timeout connect  <%= @def_tm_connect %>
+  timeout client   <%= @def_tm_client %>
+  timeout server   <%= @def_tm_server %>
+  option           redispatch
+<% if @http_back == 'true' -%>
+  option           httplog
+  option           httpclose
+  option           forwardfor
+<% if !@http_back_custom.empty? -%>
+  <%= @http_back_custom %>
 <% end -%>
+<% end -%>
+  default_backend  def_back
+<% if !@def_custom.empty? -%>
+<%= @def_custom %>
+<% end %>
+<% if !@frontend.empty? -%>
+<% @frontend.each do |front| -%>
+frontend <%= front['name'] %>-frontend
+  mode <%= front['mode'] %>
+  bind <%= front['address'] %>:<%= front['port'] %>
+<% if front.has_key?('acl') -%>
+<% front['acl'].each do |acl| -%>
+  acl <%= acl['acl_name'] %>-acl <%= acl['acl_rule'] %>
+  use_backend <%= acl['acl_name'] %>-backend if <%= acl['acl_name'] %>-acl
+<% end -%>
+<% else -%>
+  use_backend <%= front['name'] %>-backend
+<% end %>
+<% end -%>
+<% end -%>
+<% if !@frontend.empty? -%>
+<% @frontend.each do |back| -%>
+<% if back.has_key?('acl') -%>
+<% back['acl'].each do |acl| -%>
+backend <%= acl['acl_name'] %>-backend
+<% if acl.has_key?('acl_check') -%>
+  <%= acl['acl_check'] %>
+<% end -%>
+<% @server.each do |srv| -%>
+<% if srv['front'] == acl['acl_name'] -%>
+  server <%= srv['servername'] %> <%= srv['ip'] %>:<%= srv['port'] %> <% if srv.has_key?('maxconn') %> maxconn <%= srv['maxconn'] %><% end %><% if srv.has_key?('time_check') %> check inter <%= srv['time_check'] %><% end %>
+<% end -%>
+<% end %>
+<% end -%>
+<% else %>
+backend <%= back['name'] %>-backend
+  mode <%= back['mode'] %>
+<% if back.has_key?('check') -%>
+  <%= back['check'] %>
+<% end -%>
+<% @server.each do |srv| -%>
+<% if srv['front'] == back['name'] -%>
+  server <%= srv['servername'] %> <%= srv['ip'] %>:<%= srv['port'] %> <% if srv.has_key?('maxconn') %> maxconn <%= srv['maxconn'] %><% end %><% if srv.has_key?('time_check') %> check inter <%= srv['time_check'] %><% end %>
+<% end -%>
+<% end %>
+<% end -%>
+<% end -%>
+<% end -%>
+backend def_back
+  server <%= @def_backend %>
