@@ -1,0 +1,21 @@
+#Managed by puppet
+
+DEVICE=<%= @iface %>
+BOOTPROTO=<%= @bootproto %>
+ONBOOT=<%= @onboot %>
+HOSTNAME=<%= @hostname %>
+TYPE=Ethernet
+<% if @bootproto!='dhcp'- %>
+IPADDR=<%= @ipaddr %>
+PREFIX=<%= @prefix %>
+MTU=<%= @mtu %>
+<% if! @gateway.empty?- %>
+GATEWAY=<%= @gateway %>
+<% end- %>
+<% if! @dns1.empty?- %>
+DNS1=<%= @dns1 %>
+<% end- %>
+<% if! @dns2.empty?- %>
+DNS2=<%= @dns2 %>
+<% end- %>
+<% end- %>
