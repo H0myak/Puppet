@@ -1,0 +1,5 @@
+# Managed by puppet
+
+<% @domain.each do |dom| -%>
+<%= dom['keyname']%> <%= dom['domain']%>:<%= dom['selector']%>:<%= dom['keypath']%>
+<% end -%>

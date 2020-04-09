@@ -1,0 +1,47 @@
+server:
+  verbosity: 1
+  num-threads: 2
+  interface: <%= @listening %>
+  port: 53
+  msg-cache-size: 128m
+  do-ip4: yes
+  do-ip6: no
+  do-udp: yes
+  do-tcp: yes
+  access-control: 0.0.0.0/0 refuse
+  access-control: 127.0.0.0/8 allow
+<% if @allow_networks != '' -%>
+<% @allow_networks.each do |nw| -%>
+  access-control: <%= nw %> allow
+<% end %><% end %>
+  chroot: "/etc/unbound"
+  username: "unbound"
+  directory: "/etc/unbound"
+  use-syslog: yes
+  log-time-ascii: yes
+  #logfile: "unbound.log"
+  hide-version: yes
+  cache-max-ttl: 300
+  rrset-roundrobin: no
+
+remote-control:
+  control-enable: yes
+
+<% @stubs != '' -%>
+<% @stubs.each do |z,l| %>
+stub-zone:
+  name: "<%= z %>"
+<% l.each do |ip| -%>
+  stub-addr: <%= ip %>
+<% end -%><% end -%>
+
+<% @forwards != '' -%>
+<% @forwards.each do |z,l| -%>
+forward-zone:
+  name: "<%= z %>"
+<% l.each do |ip| -%>
+  forward-addr: <%= ip %>
+<% end -%><% end -%>
+<% if @custom != '' -%>
+<%= @custom %>
+<% end -%>

@@ -1,0 +1,152 @@
+<% if !@default_trap.empty? -%>
+<% if !@shared_ip %>
+# trap for bad Host requests
+<% if !@ssl_only -%>
+server {
+<% if !@ip.empty? -%>
+    <% @ip.each do |arg| %>listen <%= arg %>:<%= @port %> default;
+<% end -%>
+<% else -%>
+    listen <%= @port %> default;
+<% end -%>
+    server_name _;
+<% if @log -%>
+    access_log /var/log/nginx/bad.log bad;
+<% if @logstash_host_port -%>
+    access_log syslog:server=<%= logstash_host_port %>,tag=<%= logstash_tag %> full;
+<% end -%>
+<% end -%>
+
+    <%= @default_trap_action %>
+}
+<% end -%>
+<% # redirect to https for ssl_only sites %>
+<% if @trap_to_ssl -%>
+server {
+<% if !@ip.empty? -%>
+    <% @ip.each do |arg| %>listen <%= arg %>:<%= @port %> default;
+<% end -%>
+<% else -%>
+    listen <%= @port %> default;
+<% end -%>
+    server_name <%= @main_name %><% @aliases.each do |arg| %> <%= arg %><% end %>;
+<% if @acl -%>
+<% @acl.each do |rule| -%>
+    #<%= rule['comment'] %>
+    allow <%= rule['ip'] %>;
+<% end -%>
+    deny all;
+<% end -%>
+<% if @log -%>
+    access_log /var/log/nginx/bad.log bad;
+<% if @logstash_host_port -%>
+    access_log syslog:server=<%= logstash_host_port %>,tag=<%= logstash_tag %> full;
+<% end -%>
+<% end -%>
+
+    <%= @default_trap_action %>
+}
+<% end -%>
+<% end -%>
+<% # end %>
+
+<% end -%>
+<% if !@ssl_only -%>
+server {
+<% if !@ip.empty? -%>
+    <% @ip.each do |arg| %>listen <%= arg %>:<%= @port %><% if @default_server %> default<% end %>;
+<% end -%>
+<% else -%>
+    listen <%= @port %><% if @default_server %> default<% end %>;
+<% end -%>
+    server_name <%= @main_name %><% @aliases.each do |arg| %> <%= arg %><% end %>;
+<% if @acl -%>
+<% @acl.each do |rule| -%>
+    #<%= rule['comment'] %>
+    allow <%= rule['ip'] %>;
+<% end -%>
+    deny all;
+<% end -%>
+<% if @log -%>
+    access_log /var/log/nginx/access.log full<% if @gzip_log %> gzip<% end %>;
+<% if @logstash_host_port -%>
+    access_log syslog:server=<%= logstash_host_port %>,tag=<%= logstash_tag %> full;
+<% end -%>
+<% end -%>
+
+<% if !@proxy_pass.empty? -%>
+    location / {
+        proxy_pass http://<%= @proxy_pass %>;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP-TMP $remote_addr;
+<% if @forwarded_proto -%>
+        proxy_set_header X-Forwarded-Proto $scheme;
+<% end -%>
+        proxy_set_header X-Real-IP $remote_addr;
+<% if @ssl -%>
+        proxy_set_header X-SCHEME $scheme;
+<% end -%>
+        proxy_redirect off;
+<%= @custom_index -%>
+    }
+<% end -%>
+<% if !@redirect.empty? -%>
+    rewrite <%= @redirect %> permanent;
+<% end -%>
+<%= @custom -%>
+}
+<% end -%>
+<% if @ssl -%>
+server {
+<% if !@ip.empty? -%>
+    <% @ip.each do |arg| %>listen <%= arg %>:<%= @port_ssl %> http2 ssl;
+<% end -%>
+<% else -%>
+    listen <%= @port_ssl %> http2 ssl;
+<% end -%>
+    server_name <%= @main_name %><% if @ssl_aliases %><% @aliases.each do |arg| %> <%= arg %><% end %><% end %>;
+<% if @acl -%>
+<% @acl.each do |rule| -%>
+    #<%= rule['comment'] %>
+    allow <%= rule['ip'] %>;
+<% end -%>
+    deny all;
+<% end -%>
+<% if @log -%>
+    access_log /var/log/nginx/access.log full<% if @gzip_log %> gzip<% end %>;
+<% if @logstash_host_port -%>
+    access_log syslog:server=<%= logstash_host_port %>,tag=<%= logstash_tag %> full;
+<% end -%>
+<% end -%>
+
+<% if @ssl_cert.empty? -%>
+    ssl_certificate     /etc/pki/nginx/ssl.crt/<%= @main_name %>.crt;
+    ssl_certificate_key /etc/pki/nginx/ssl.key/<%= @main_name %>.key;
+<% else -%>
+    ssl_certificate     /etc/pki/nginx/ssl.crt/<%= @ssl_cert %>.crt;
+    ssl_certificate_key /etc/pki/nginx/ssl.key/<%= @ssl_cert %>.key;
+<% end -%>
+
+<% if !@proxy_pass.empty? -%>
+    location / {
+        proxy_pass <%= @ssl_proxy_scheme %>://<%= @proxy_pass %>;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP-TMP $remote_addr;
+        proxy_set_header X-Real-IP $remote_addr;
+<% if @forwarded_proto -%>
+        proxy_set_header X-Forwarded-Proto $scheme;
+<% end -%>
+<% if @ssl -%>
+        proxy_set_header X-SCHEME $scheme;
+<% end -%>
+        proxy_redirect off;
+<%= @custom_index -%>
+    }
+<% end -%>
+<% if !@custom_ssl.empty? -%>
+<%= @custom_ssl -%>
+<% else -%>
+<%= @custom -%>
+<% end -%>
+}
+<% end -%>
