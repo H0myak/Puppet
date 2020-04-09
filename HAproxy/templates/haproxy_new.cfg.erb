@@ -37,6 +37,9 @@ defaults
 frontend <%= front['name'] %>-frontend
   mode <%= front['mode'] %>
   bind <%= front['address'] %>:<%= front['port'] %>
+<% if front.has_key?('fr_custom') -%>
+  <%= front.['fr_custom'] %>
+<% end %>
 <% if front.has_key?('acl') -%>
 <% front['acl'].each do |acl| -%>
   acl <%= acl['acl_name'] %>-acl <%= acl['acl_rule'] %>
