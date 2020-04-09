@@ -1,0 +1,21 @@
+class yum::ceph {
+  include yum
+  yumrepo { "ceph $ceph_release":
+    descr    => "Ceph repository for $ceph_release packages",
+    #https://download.ceph.com/rpm-nautilus/el7/x86_64/
+    baseurl  => "http://proxy.server/ceph/rpm-$ceph_release/el7/x86_64/",
+    gpgcheck => 1,
+    gpgkey   => 'http://proxy.server/ceph/keys/release.asc',
+    enabled  => 1,
+    require  => Yumrepo['base'],
+  }
+  yumrepo { "ceph $ceph_release noarch":
+    descr    => "Ceph repository for $ceph_release packages noarch",
+    #https://download.ceph.com/rpm-nautilus/el7/noarch/
+    baseurl  => "http://proxy.server/ceph/rpm-$ceph_release/el7/noarch/",
+    gpgcheck => 1,
+    gpgkey   => 'http://proxy.server/ceph/keys/release.asc',
+    enabled  => 1,
+    require  => Yumrepo['base'],
+  }
+}
